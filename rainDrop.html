@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        background: #012;
+        overflow: hidden;
+    }
+    </style>
+</head>
+
+<body>
+    <script src="./libs/d3/d3.min.js"></script>
+    <script>
+
+
+    var width = window.innerWidth,
+        height = window.innerHeight;
+
+    var svg = d3.select('body')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+    var group = svg.append('g');
+
+
+    setInterval(function() {
+        var dropData = generateData();
+        draw(dropData);
+    }, 10);    
+
+    function generateData() {
+        var _dropData = [];
+
+        for (var i = 0; i < 500; i++) {
+            _dropData.push(generateOne());
+        }
+
+        function generateOne() {
+            var randomDeltaX = Math.floor(Math.random() * 6) - 3;
+            var randomDeltaY = 1 - (Math.floor(Math.random() * 100) % 20) / 100;
+            var _x1 = xRange(width),
+                _x2 = _x1 + randomDeltaX,
+                _long = dropLong(),
+                _y1 = 0,
+                _y2 = _y1 + _long;
+
+            var _deltaX1 = randomDeltaX * height / _y2;
+            var targetX1 = _x1 + _deltaX1,
+                targetX2 = targetX1 + randomDeltaX,
+                targetY2 = height * randomDeltaY,
+                targetY1 = height * randomDeltaY - _long;
+
+            return {
+                origin: {
+                    x1: _x1,
+                    x2: _x2,
+                    y1: _y1,
+                    y2: _y2
+                },
+                target: {
+                    x1: targetX1,
+                    x2: targetX2,
+                    y1: targetY1,
+                    y2: targetY2
+                }
+            };
+        }
+
+        function xRange(w) {
+            return Math.floor(Math.random() * w);
+        }
+
+        function dropLong() {
+            return Math.floor(Math.random() * 30) + 30;
+        }
+
+        return _dropData;
+    }
+
+    function draw(data) {
+        var lines = group.selectAll('line')
+            .data(data);
+
+        lines.enter()
+            .append('line')
+            .attr('x1', function(d, i) {
+                return d.origin.x1;
+            })
+            .attr('y1', function(d, i) {
+                return d.origin.y1;
+            })
+            .attr('x2', function(d, i) {
+                return d.origin.x2;
+            })
+            .attr('y2', function(d, i) {
+                return d.origin.y2;
+            })
+            .style('stroke', '#ffffff')
+            .style('stroke-width', '0.6')
+            .transition()
+            .duration(function(d, i) {
+                return Math.random() * 200 + 300;
+            })
+            .ease('linear')
+            .attr('x1', function(d, i) {
+                return d.target.x1;
+            })
+            .attr('y1', function(d, i) {
+                return d.target.y1;
+            })
+            .attr('x2', function(d, i) {
+                return d.target.x2;
+            })
+            .attr('y2', function(d, i) {
+                return d.target.y2;
+            })
+            .style('opacity', 0.3)
+            .each('end', cb);
+
+        function cb() {
+            // console.log(document.getElementsByTagName('line').length);
+            this.remove();
+            dropTailer(this.__data__);
+        }
+
+        function dropTailer(d) {
+            const TAILER_RADIUS = 10;
+            var cx = d.target.x2,
+                cy = d.target.y2;
+
+            var ellipse = group.append('ellipse')
+                .attr('cx', cx)
+                .attr('cy', cy)
+                .style('stroke', '#fff')
+                .style('stroke-width', 1)
+                .style('fill', 'none');
+
+            var linearRX = d3.scale.linear()
+                .domain([0, 1])
+                .range([0, 2]);
+
+            var linearRY = d3.scale.linear()
+                .domain([0, 1])
+                .range([0, 1]);
+
+            var aniEllipse = ellipse.transition()
+                .duration(100)
+                .attrTween('rx', function() {                    
+                    return function(t) {
+                        return linearRX(t);
+                    };
+                })
+                .attrTween('ry', function() {                    
+                    return function(t) {
+                        return linearRY(t);
+                    };
+                })
+                .each('end', function() {
+                    this.remove();
+                });
+        }
+    }
+
+    </script>
+</body>
+
+</html>
