@@ -8,16 +8,83 @@
         padding: 0;
     }
     body {
-        background: #012;
         overflow: hidden;
+    }
+    .toggler {
+        position: absolute;        
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: opacity 1s;
+    }
+    .toggler:hover {
+        opacity: 0.8;
+    }
+    .toggler.auto {
+        width: 130px;
+        left: 20px;
+        top: 20px;
+        text-align: center;
+        border: 1px solid #ffffff;
+        color: #ffffff;
+    }
+    .toggler.day {
+        left: 20px;
+        top: 90px;
+        background: #66ccff;
+    }
+    .toggler.night {
+        left: 90px;
+        top: 90px;
+        background: #666666;
+    }
+    .toggler span {
+        position: relative;
+        z-index: 25;
+    }
+    #progress-mask {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: inline-block;
+        width: 0;
+        height: 60px;
+        background: orange;
+        z-index: 1;
+        border-radius: 5px;
+        opacity: 0.6;
+        transition: width 10s;
     }
     </style>
 </head>
 
 <body>
+
+    <div id="toggler-auto" class="toggler auto" onclick="changeToggleStatus()">
+        <span>AUTO</span>
+        <span id="toggler-status">ON</span>
+        <span id="progress-mask"></span>
+    </div>
+    <div id="toggler-day" class="toggler day" onclick="manualToggle('day')">
+    </div>
+    <div id="toggler-night" class="toggler night" onclick="manualToggle('night')">
+    </div>
+
     <script src="./libs/d3/d3.min.js"></script>
     <script>
 
+    const COLOR_SCHEDULE = {
+        'day': {
+            back: '#f1f1f1',
+            rain: '#000000'
+        },
+        'night': {
+            back: '#001122',
+            rain: '#ffffff'
+        }
+    };
 
     var width = window.innerWidth,
         height = window.innerHeight;
@@ -27,13 +94,92 @@
         .attr('width', width)
         .attr('height', height);
     var group = svg.append('g');
+    var rainColor = COLOR_SCHEDULE['night'].rain;
+    var autoToggleStatus = true;
+    var autoToggleTimer;
+    var progressMask = document.getElementById('progress-mask');
 
+    // init
+    init()
 
-    setInterval(function() {
-        var dropData = generateData();
-        draw(dropData);
-    }, 10);    
+    /**
+     * @name init
+     * @description initilization
+     * @return {[type]} [description]
+     */
+    function init() {
+        // default
+        setDayOrNight('night');
+        // set auto toggle
+        autoToggle();
 
+        setInterval(function() {
+            var dropData = generateData();
+            draw(dropData);
+        }, 10);    
+    }
+
+    /**
+     * @name autoToggle
+     * @description 自动变换状态切换
+     */
+    function autoToggle() {
+        if(autoToggleStatus) {
+            document.body.style.transition = 'background 10s';
+            toggleAction();
+            startTimer();                       
+        } else {
+            document.body.style.transition = 'background 0.5s';
+        }
+    }
+
+    function changeToggleStatus() {
+        autoToggleStatus = true;
+        document.getElementById('toggler-status').innerHTML = 'ON';
+        startTimer(); 
+        document.body.style.transition = 'background 10s';
+    }
+
+    function toggleAction() {
+        // progressMask.style.width = '0';
+        if(rainColor === COLOR_SCHEDULE['night'].rain) {
+            setDayOrNight('day');
+        } else {
+            setDayOrNight('night');
+        }
+    }
+
+    function startTimer() {
+        toggleAction();
+        autoToggleTimer = setInterval(function() {            
+            toggleAction();
+        }, 12000); 
+    }
+
+    function manualToggle(type) {
+        autoToggleStatus = false;
+        document.getElementById('toggler-status').innerHTML = 'OFF';
+        clearInterval(autoToggleTimer);
+        document.body.style.transition = 'background 0.5s';
+        setDayOrNight(type);
+    }
+    
+    /**
+     * @name setDayOrNight
+     * @description Set whether day or night
+     * @param {string} type
+     */
+    function setDayOrNight(type) {
+        document.body.style.background = COLOR_SCHEDULE[type].back;
+        // autoToggleStatus && (progressMask.style.width = '100%');
+        rainColor = COLOR_SCHEDULE[type].rain;        
+    }
+
+    /**
+     * @name generateData
+     * @description Get data array
+     * @return {array}
+     */
     function generateData() {
         var _dropData = [];
 
@@ -83,6 +229,10 @@
         return _dropData;
     }
 
+    /**
+     * @name draw
+     * @param  {array} data
+     */
     function draw(data) {
         var lines = group.selectAll('line')
             .data(data);
@@ -101,7 +251,7 @@
             .attr('y2', function(d, i) {
                 return d.origin.y2;
             })
-            .style('stroke', '#ffffff')
+            .style('stroke', rainColor)
             .style('stroke-width', '0.6')
             .transition()
             .duration(function(d, i) {
@@ -130,20 +280,19 @@
         }
 
         function dropTailer(d) {
-            const TAILER_RADIUS = 10;
             var cx = d.target.x2,
                 cy = d.target.y2;
 
             var ellipse = group.append('ellipse')
                 .attr('cx', cx)
                 .attr('cy', cy)
-                .style('stroke', '#fff')
+                .style('stroke', rainColor)
                 .style('stroke-width', 1)
                 .style('fill', 'none');
 
             var linearRX = d3.scale.linear()
                 .domain([0, 1])
-                .range([0, 2]);
+                .range([0, 3]);
 
             var linearRY = d3.scale.linear()
                 .domain([0, 1])
