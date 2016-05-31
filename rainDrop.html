@@ -236,7 +236,9 @@
     function changeToggleStatus() {
         autoToggleStatus = true;
         document.getElementById('toggler-status').innerHTML = 'ON';
-        startTimer(); 
+        startTimer();
+        progressMask.style.transition = 'width 10s';
+        progressMask.style.width = (!progressMask.style.width || progressMask.style.width === '0px') ? '100%': '0';
     }
 
     /**
