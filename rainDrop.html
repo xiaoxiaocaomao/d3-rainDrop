@@ -9,6 +9,7 @@
     }
     body {
         overflow: hidden;
+        transition: background 1s;
     }
     .toggler {
         position: absolute;        
@@ -123,7 +124,7 @@
     var dropAmountRange = {
         min: 0,
         max: 800
-    };    
+    };
 
     var width = window.innerWidth,
         height = window.innerHeight;
@@ -146,15 +147,13 @@
      * @description initilization
      */
     function init() {
-        // default
-        setDayOrNight('night');
         // set auto toggle
         autoToggle();
 
         setInterval(function() {
             var dropData = generateData();
             draw(dropData);
-        }, 10);  
+        }, 10);
 
         // init amount style
         setAmountStyle();
@@ -225,42 +224,59 @@
      */
     function autoToggle() {
         if(autoToggleStatus) {
-            document.body.style.transition = 'background 10s';
             toggleAction();
             startTimer();                       
-        } else {
-            document.body.style.transition = 'background 0.5s';
         }
     }
 
+    /**
+     * @name changeToggleStatus
+     * @description make auto toggler ON
+     */
     function changeToggleStatus() {
         autoToggleStatus = true;
         document.getElementById('toggler-status').innerHTML = 'ON';
         startTimer(); 
-        document.body.style.transition = 'background 10s';
     }
 
+    /**
+     * @name toggleAction
+     * @description toggle action
+     */
     function toggleAction() {
-        // progressMask.style.width = '0';
-        if(rainColor === COLOR_SCHEDULE['night'].rain) {
-            setDayOrNight('day');
-        } else {
-            setDayOrNight('night');
-        }
+        progressMask.style.transition = 'width 10s';
+        setTimeout(function() {
+            progressMask.style.width = (!progressMask.style.width || progressMask.style.width === '0px') ? '100%': '0';
+            if(rainColor === COLOR_SCHEDULE['night'].rain) {
+                setDayOrNight('day');
+            } else {
+                setDayOrNight('night');
+            }
+        }, 0);        
     }
 
+    /**
+     * @name startTimer
+     * @description start the timer
+     */
     function startTimer() {
-        toggleAction();
+        // init
         autoToggleTimer = setInterval(function() {            
             toggleAction();
-        }, 12000); 
+        }, 10000); 
     }
 
+    /**
+     * @name manualToggle
+     * @description toggle day or night manually
+     * @param  {string} type day or night
+     */
     function manualToggle(type) {
         autoToggleStatus = false;
         document.getElementById('toggler-status').innerHTML = 'OFF';
+        progressMask.style.transition = 'none';
+        progressMask.style.width = '0';
         clearInterval(autoToggleTimer);
-        document.body.style.transition = 'background 0.5s';
         setDayOrNight(type);
     }
     
@@ -374,7 +390,6 @@
             .each('end', cb);
 
         function cb() {
-            // console.log(document.getElementsByTagName('line').length);
             this.remove();
             dropTailer(this.__data__);
         }
