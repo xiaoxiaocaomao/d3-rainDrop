@@ -57,6 +57,35 @@
         opacity: 0.6;
         transition: width 10s;
     }
+    #toggler-amount {
+        position: absolute;
+        left: 20px;
+        top: 160px;
+        width: 130px;
+    }
+    .amount-axis {
+        width: 100%;
+        height: 10px;
+        border: 3px solid #e3e3e3;
+        background: #fff;
+        border-radius: 5px;
+        box-sizing: border-box;
+        margin: 20px 0 0;
+    }
+    .amount-ctrl {
+        position: absolute;
+        left: 0;
+        top: 15px;
+        width: 16px;
+        height: 16px;
+        border: 3px solid #868686;
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+    }
+    .amount-ctrl:hover {
+        background: #f1f1f1;
+    }
     </style>
 </head>
 
@@ -70,6 +99,10 @@
     <div id="toggler-day" class="toggler day" onclick="manualToggle('day')">
     </div>
     <div id="toggler-night" class="toggler night" onclick="manualToggle('night')">
+    </div>
+    <div id="toggler-amount">
+        <div class="amount-axis"></div>
+        <div id="amount-ctrl" class="amount-ctrl"></div>
     </div>
 
     <script src="./libs/d3/d3.min.js"></script>
@@ -85,6 +118,12 @@
             rain: '#ffffff'
         }
     };
+
+    var dropAmount = 500;
+    var dropAmountRange = {
+        min: 0,
+        max: 800
+    };    
 
     var width = window.innerWidth,
         height = window.innerHeight;
@@ -105,7 +144,6 @@
     /**
      * @name init
      * @description initilization
-     * @return {[type]} [description]
      */
     function init() {
         // default
@@ -116,12 +154,74 @@
         setInterval(function() {
             var dropData = generateData();
             draw(dropData);
-        }, 10);    
+        }, 10);  
+
+        // init amount style
+        setAmountStyle();
+        bindAmountEvent();
+    }
+
+    /**
+     * @name setAmountStyle
+     * @description set rainfall amount style
+     */
+    function setAmountStyle() {
+        var dropAmountCtrl = document.getElementById('amount-ctrl');
+        var maxWidth = dropAmountCtrl.parentNode.clientWidth;
+
+        var targetLeft = dropAmount / dropAmountRange.max * maxWidth;
+        dropAmountCtrl.style.left = targetLeft + 'px';
+    }
+
+    /**
+     * @name bindAmountEvent
+     * @description bind event for amount controller
+     */
+    function bindAmountEvent() {
+        var dropAmountCtrl = document.getElementById('amount-ctrl');
+        var maxWidth = dropAmountCtrl.parentNode.clientWidth;
+        var refLeft = dropAmountCtrl.parentNode.offsetLeft;
+        var moveToken = false;
+
+
+        dropAmountCtrl.addEventListener('mousedown', function(e) { 
+            moveToken = true;
+            locationRecord = e.clientX;
+        });
+
+        dropAmountCtrl.addEventListener('mousemove', function(e) {
+
+            if(!moveToken) {
+                return false;
+            }
+
+            var x = e.clientX;
+            var delta = x - locationRecord;
+            var _targetLeft = parseInt(dropAmountCtrl.style.left) + delta;
+            dropAmount = dropAmountRange.max * (_targetLeft) / maxWidth;
+
+            if(delta > 0 && locationRecord < maxWidth + 20) {
+                // right
+                dropAmountCtrl.style.left = _targetLeft + 'px';
+            } else if(delta < 0 && locationRecord > 20) {
+                // left
+                dropAmountCtrl.style.left = _targetLeft + 'px';
+            }
+            locationRecord = locationRecord + delta;
+        });
+
+        dropAmountCtrl.addEventListener('mouseup', function(e) { 
+            moveToken = false;
+        });
+
+        dropAmountCtrl.addEventListener('mouseout', function(e) { 
+            moveToken = false;
+        });
     }
 
     /**
      * @name autoToggle
-     * @description 自动变换状态切换
+     * @description auto toggle status
      */
     function autoToggle() {
         if(autoToggleStatus) {
@@ -183,7 +283,7 @@
     function generateData() {
         var _dropData = [];
 
-        for (var i = 0; i < 500; i++) {
+        for (var i = 0; i < dropAmount; i++) {
             _dropData.push(generateOne());
         }
 
