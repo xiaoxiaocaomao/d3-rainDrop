@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>d3-rainDrop-example</title>
+    <link rel="stylesheet" href="./style/style.css" />
+</head>
+
+<body>
+
+    <div id="toggler-auto" class="toggler auto" onclick="changeToggleStatus()">
+        <span>AUTO</span>
+        <span id="toggler-status">ON</span>
+        <span id="progress-mask"></span>
+    </div>
+    <div id="toggler-day" class="toggler day" onclick="manualToggle('day')">
+    </div>
+    <div id="toggler-night" class="toggler night" onclick="manualToggle('night')">
+    </div>
+    <div id="ctrl-amount" class="toggler-drag">
+        <span>Amount:</span>
+        <div class="drag-base"></div>
+        <div id="amount-ctrl" class="drag-point"></div>
+    </div>
+    <div id="ctrl-wind" class="toggler-drag">
+        <span>Wind:</span>
+        <div class="drag-base"></div>
+        <div id="wind-ctrl" class="drag-point"></div>
+    </div>
+
+    <script src="./libs/d3/d3.min.js"></script>
+    <script src="./script/main.js"></script>
+</body>
+
+</html>
